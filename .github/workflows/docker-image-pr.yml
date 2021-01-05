@@ -30,7 +30,7 @@ jobs:
         with:
           push: true
           context: ./base
-          file: ./Dockerfile
+          file: ./base/Dockerfile
           tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-base-${{ steps.short-sha.outputs.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
@@ -41,7 +41,7 @@ jobs:
         with:
           push: true
           context: ./minimal
-          file: ./Dockerfile
+          file: ./minimal/Dockerfile
           tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-minimal-${{ steps.short-sha.outputs.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
@@ -52,7 +52,7 @@ jobs:
         with:
           push: true
           context: ./pytorch
-          file: ./Dockerfile
+          file: ./pytorch/Dockerfile
           tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-pytorch-${{ steps.short-sha.outputs.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
@@ -85,7 +85,7 @@ jobs:
         with:
           push: true
           context: ./base
-          file: ./Dockerfile
+          file: ./base/Dockerfile
           tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-base-gpu-${{ steps.short-sha.outputs.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
@@ -97,7 +97,7 @@ jobs:
         with:
           push: true
           context: ./minimal
-          file: ./Dockerfile
+          file: ./minimal/Dockerfile
           tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-minimal-gpu-${{ steps.short-sha.outputs.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
@@ -108,7 +108,7 @@ jobs:
         with:
           push: true
           context: ./pytorch
-          file: ./Dockerfile.gpu
+          file: ./pytorch/Dockerfile.gpu
           tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-pytorch-gpu-${{ steps.short-sha.outputs.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
