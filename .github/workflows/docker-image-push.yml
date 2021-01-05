@@ -1,0 +1,108 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  python-docker-cpu:
+    runs-on: [self-hosted, python-docker]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build and push python:3.7-base
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./base
+          file: ./Dockerfile
+          tags: |
+            ghcr.io/kbc8894/python:3.7-base-cpu
+            ghcr.io/kbc8894/python:3.7-base
+            ghcr.io/kbc8894/python:latest
+            ghcr.io/kbc8894/python:3.7
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Build and push python:3.7-minimal
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./minimal
+          file: ./Dockerfile
+          tags: |
+            ghcr.io/kbc8894/python:3.7-minimal-cpu
+            ghcr.io/kbc8894/python:3.7-minimal
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            BASE_CONTAINER=ghcr.io/kbc8894/python:3.7-base
+      - name: Build and push python:3.7-pytorch
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./pytorch
+          file: ./Dockerfile
+          tags: |
+            ghcr.io/kbc8894/python:3.7-pytorch-cpu
+            ghcr.io/kbc8894/python:3.7-pytorch
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            BASE_CONTAINER=ghcr.io/kbc8894/python:3.7-minimal
+
+
+
+  python-docker-gpu:
+    runs-on: [self-hosted, python-docker]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build and push python:3.7-base-gpu
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./base
+          file: ./Dockerfile
+          tags: ghcr.io/kbc8894/python:3.7-base-gpu
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            BASE_CONTAINER=nvidia/cuda:11.1-cudnn8-runtime-ubuntu18.04
+      - name: Build and push python:3.7-minimal
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./minimal
+          file: ./Dockerfile
+          tags: ghcr.io/kbc8894/python:3.7-minimal-gpu
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            BASE_CONTAINER=ghcr.io/kbc8894/python:3.7-base-gpu
+      - name: Build and push python:3.7-pytorch-gpu
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./pytorch
+          file: ./Dockerfile.gpu
+          tags: ghcr.io/kbc8894/python:3.7-pytorch-gpu
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            BASE_CONTAINER=ghcr.io/kbc8894/python:3.7-minimal-gpu
