@@ -1,0 +1,116 @@
+name: Docker Image CI
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  python-docker-cpu:
+    runs-on: [self-hosted, python-docker]
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Create shot SHA
+        uses: benjlevesque/short-sha@v1.2
+        id: short-sha
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build and push python:base
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./base
+          file: ./base/Dockerfile
+          tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-base-${{ steps.short-sha.outputs.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            PYTHON_VERSION=${{ matrix.python-version }}
+      - name: Build and push python:minimal
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./minimal
+          file: ./minimal/Dockerfile
+          tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-minimal-${{ steps.short-sha.outputs.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            BASE_CONTAINER=ghcr.io/kbc8894/python:${{ matrix.python-version }}-base-${{ steps.short-sha.outputs.sha }}
+      - name: Build and push python:pytorch
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./pytorch
+          file: ./pytorch/Dockerfile
+          tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-pytorch-${{ steps.short-sha.outputs.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            BASE_CONTAINER=ghcr.io/kbc8894/python:${{ matrix.python-version }}-minimal-${{ steps.short-sha.outputs.sha }}
+
+
+  python-docker-gpu:
+    runs-on: [self-hosted, python-docker]
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Create shot SHA
+        uses: benjlevesque/short-sha@v1.2
+        id: short-sha
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build and push python:base-gpu
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./base
+          file: ./base/Dockerfile
+          tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-base-gpu-${{ steps.short-sha.outputs.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            PYTHON_VERSION=${{ matrix.python-version }}
+            BASE_CONTAINER=nvidia/cuda:11.1-cudnn8-runtime-ubuntu18.04
+      - name: Build and push python:minimal-gpu
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./minimal
+          file: ./minimal/Dockerfile
+          tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-minimal-gpu-${{ steps.short-sha.outputs.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            BASE_CONTAINER=ghcr.io/kbc8894/python:${{ matrix.python-version }}-base-gpu-${{ steps.short-sha.outputs.sha }}
+      - name: Build and push python:pytorch-gpu
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./pytorch
+          file: ./pytorch/Dockerfile.gpu
+          tags: ghcr.io/kbc8894/python:${{ matrix.python-version }}-pytorch-gpu-${{ steps.short-sha.outputs.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            BASE_CONTAINER=ghcr.io/kbc8894/python:${{ matrix.python-version }}-minimal-gpu-${{ steps.short-sha.outputs.sha }}
